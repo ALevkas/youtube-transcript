@@ -8,14 +8,17 @@
 - [x] Background service worker
 - [x] Popup UI (HTML, CSS, TypeScript)
 - [x] Prompt templates and management
-- [x] Unit tests
-- [x] README.md
+- [x] Unit tests (17 tests passing)
+- [x] README.md with installation instructions
+- [x] contextMenus permission added
+- [x] Build passes without errors
 
-## Testing Checklist
-- [ ] Load extension in Chrome - verify no errors
-- [ ] Test transcript extraction on YouTube video
-- [ ] Test sending to ChatGPT
-- [ ] Test sending to Claude
-- [ ] Test sending to Gemini
-- [ ] Test custom prompt creation
-- [ ] Test prompt editing/deletion
+## Build Verification
+```
+✅ npm run build - SUCCESS
+✅ npm run test:run - 17 tests passing
+✅ TypeScript compilation - No errors
+```
+
+## Ready for Manual Testing
+Load `dist/` folder in Chrome (chrome://extensions/ → Developer mode → Load unpacked)
