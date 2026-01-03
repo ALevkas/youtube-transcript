@@ -6,7 +6,8 @@
   "permissions": [
     "activeTab",
     "storage",
-    "tabs"
+    "tabs",
+    "contextMenus"
   ],
   "host_permissions": [
     "https://www.youtube.com/*",
