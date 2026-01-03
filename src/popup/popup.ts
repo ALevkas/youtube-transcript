@@ -43,6 +43,9 @@ const elements = {
   promptSelect: document.getElementById('prompt-select') as HTMLSelectElement,
   promptPreviewText: document.getElementById('prompt-preview-text')!,
   sendBtn: document.getElementById('send-btn')!,
+  sendRawBtn: document.getElementById('send-raw-btn')!,
+  copyBtn: document.getElementById('copy-btn')!,
+  toast: document.getElementById('toast')!,
   managePromptsBtn: document.getElementById('manage-prompts-btn')!,
   promptModal: document.getElementById('prompt-modal')!,
   closeModal: document.getElementById('close-modal')!,
@@ -76,13 +79,25 @@ function setLoading(loading: boolean): void {
     btnText.classList.add('hidden');
     btnLoading.classList.remove('hidden');
     elements.sendBtn.setAttribute('disabled', 'true');
+    elements.sendRawBtn.setAttribute('disabled', 'true');
+    elements.copyBtn.setAttribute('disabled', 'true');
   } else {
     btnText.classList.remove('hidden');
     btnLoading.classList.add('hidden');
     if (state.transcript) {
       elements.sendBtn.removeAttribute('disabled');
+      elements.sendRawBtn.removeAttribute('disabled');
+      elements.copyBtn.removeAttribute('disabled');
     }
   }
+}
+
+function showToast(message: string): void {
+  elements.toast.textContent = message;
+  elements.toast.classList.remove('hidden');
+  setTimeout(() => {
+    elements.toast.classList.add('hidden');
+  }, 2000);
 }
 
 // Storage
@@ -375,6 +390,50 @@ async function sendToLLM(): Promise<void> {
   }
 }
 
+async function sendRawToLLM(): Promise<void> {
+  if (!state.transcript) {
+    showError('No transcript available');
+    return;
+  }
+
+  setLoading(true);
+  hideError();
+
+  try {
+    const provider = LLM_PROVIDERS[state.selectedProvider];
+
+    // Store raw transcript for injection
+    await chrome.storage.local.set({ pendingPrompt: state.transcript });
+
+    // Open LLM in new tab
+    await chrome.tabs.create({ url: provider.url });
+
+    // Save settings
+    await saveSettings();
+
+    // Close popup
+    window.close();
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    showError(message);
+    setLoading(false);
+  }
+}
+
+async function copyTranscript(): Promise<void> {
+  if (!state.transcript) {
+    showError('No transcript available');
+    return;
+  }
+
+  try {
+    await navigator.clipboard.writeText(state.transcript);
+    showToast('Transcript copied to clipboard!');
+  } catch (error) {
+    showError('Failed to copy transcript');
+  }
+}
+
 // Event Listeners
 elements.llmSelect.addEventListener('change', () => {
   state.selectedProvider = elements.llmSelect.value as LLMProvider;
@@ -388,6 +447,8 @@ elements.promptSelect.addEventListener('change', () => {
 });
 
 elements.sendBtn.addEventListener('click', sendToLLM);
+elements.sendRawBtn.addEventListener('click', sendRawToLLM);
+elements.copyBtn.addEventListener('click', copyTranscript);
 elements.managePromptsBtn.addEventListener('click', openPromptModal);
 elements.closeModal.addEventListener('click', closePromptModal);
 elements.addPromptBtn.addEventListener('click', () => openEditPromptModal(null));

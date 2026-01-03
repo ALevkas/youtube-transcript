@@ -51,12 +51,21 @@
 
       <section class="actions">
         <button id="send-btn" class="btn primary" disabled>
-          <span class="btn-text">Send to LLM</span>
+          <span class="btn-text">Send with Prompt</span>
           <span class="btn-loading hidden">
             <span class="spinner"></span>
             Loading...
           </span>
         </button>
+
+        <div class="actions-row">
+          <button id="send-raw-btn" class="btn secondary" disabled>
+            Send Raw Transcript
+          </button>
+          <button id="copy-btn" class="btn secondary" disabled>
+            Copy Transcript
+          </button>
+        </div>
       </section>
 
       <section class="quick-actions">
@@ -64,6 +73,8 @@
           Manage Prompts
         </button>
       </section>
+
+      <div id="toast" class="toast hidden">Copied!</div>
     </main>
 
     <!-- Prompt Management Modal -->
