@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=400, initial-scale=1.0">
+  <title>YouTube Transcript to LLM</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>YouTube Transcript to LLM</h1>
+    </header>
+
+    <div id="error-container" class="error hidden">
+      <span id="error-message"></span>
+    </div>
+
+    <div id="not-youtube" class="notice hidden">
+      <p>Open a YouTube video to use this extension.</p>
+    </div>
+
+    <main id="main-content">
+      <section class="video-info hidden" id="video-info-section">
+        <div class="video-title" id="video-title">Loading...</div>
+        <div class="video-channel" id="video-channel"></div>
+      </section>
+
+      <section class="settings">
+        <div class="form-group">
+          <label for="llm-select">LLM Provider</label>
+          <select id="llm-select">
+            <option value="chatgpt">ChatGPT</option>
+            <option value="claude">Claude</option>
+            <option value="gemini">Gemini</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="prompt-select">Prompt Template</label>
+          <select id="prompt-select">
+            <!-- Populated dynamically -->
+          </select>
+        </div>
+
+        <details class="prompt-preview">
+          <summary>Preview prompt</summary>
+          <pre id="prompt-preview-text"></pre>
+        </details>
+      </section>
+
+      <section class="actions">
+        <button id="send-btn" class="btn primary" disabled>
+          <span class="btn-text">Send to LLM</span>
+          <span class="btn-loading hidden">
+            <span class="spinner"></span>
+            Loading...
+          </span>
+        </button>
+      </section>
+
+      <section class="quick-actions">
+        <button id="manage-prompts-btn" class="btn secondary small">
+          Manage Prompts
+        </button>
+      </section>
+    </main>
+
+    <!-- Prompt Management Modal -->
+    <div id="prompt-modal" class="modal hidden">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Manage Prompts</h2>
+          <button id="close-modal" class="close-btn">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div id="prompts-list" class="prompts-list">
+            <!-- Populated dynamically -->
+          </div>
+          <button id="add-prompt-btn" class="btn primary">+ Add New Prompt</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Edit Prompt Modal -->
+    <div id="edit-prompt-modal" class="modal hidden">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 id="edit-modal-title">Add Prompt</h2>
+          <button id="close-edit-modal" class="close-btn">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="prompt-name-input">Name</label>
+            <input type="text" id="prompt-name-input" placeholder="My Custom Prompt">
+          </div>
+          <div class="form-group">
+            <label for="prompt-template-input">Template</label>
+            <textarea id="prompt-template-input" rows="10" placeholder="Use {video_title}, {transcript}, etc."></textarea>
+            <small>Variables: {video_title}, {video_url}, {channel_name}, {transcript}, {duration}</small>
+          </div>
+          <div class="modal-actions">
+            <button id="cancel-edit-btn" class="btn secondary">Cancel</button>
+            <button id="save-prompt-btn" class="btn primary">Save</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="popup.js"></script>
+</body>
+</html>
