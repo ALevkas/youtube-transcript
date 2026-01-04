@@ -1,4 +1,13 @@
-import type { InjectPromptPayload, Message } from '../types';
+// Types inlined to avoid ES module syntax in content scripts
+interface InjectPromptPayload {
+  prompt: string;
+  autoSubmit?: boolean;
+}
+
+interface Message {
+  type: string;
+  payload?: unknown;
+}
 
 interface InjectionConfig {
   inputSelector: string;
@@ -8,8 +17,8 @@ interface InjectionConfig {
 
 const SITE_CONFIGS: Record<string, InjectionConfig> = {
   'chat.openai.com': {
-    inputSelector: '#prompt-textarea',
-    submitSelector: '[data-testid="send-button"]',
+    inputSelector: '#prompt-textarea.ProseMirror',
+    submitSelector: '#composer-submit-button',
     waitTime: 1000
   },
   'claude.ai': {
@@ -21,6 +30,16 @@ const SITE_CONFIGS: Record<string, InjectionConfig> = {
     inputSelector: '.ql-editor, [contenteditable="true"]',
     submitSelector: 'button[aria-label="Send message"], button.send-button',
     waitTime: 1500
+  },
+  'grok.com': {
+    inputSelector: 'div[contenteditable="true"], textarea[placeholder*="Ask"]',
+    submitSelector: 'button[type="submit"]',
+    waitTime: 2500
+  },
+  'perplexity.ai': {
+    inputSelector: 'textarea, div[contenteditable="true"]',
+    submitSelector: 'button[aria-label="Submit"]',
+    waitTime: 2500
   }
 };
 
@@ -60,9 +79,31 @@ function waitForElement(selector: string, timeout = 10000): Promise<Element | nu
  */
 async function setInputValue(element: Element, text: string): Promise<boolean> {
   try {
+    const hostname = window.location.hostname;
+
+    // ChatGPT specific handling - try fallback textarea first
+    if (hostname.includes('chat.openai.com')) {
+      const fallbackTextarea = document.querySelector('textarea[name="prompt-textarea"]') as HTMLTextAreaElement;
+      if (fallbackTextarea) {
+        console.log('[LLM Injector] Using fallback textarea for ChatGPT');
+        const originalDisplay = fallbackTextarea.style.display;
+        fallbackTextarea.style.display = '';
+        await new Promise(resolve => setTimeout(resolve, 50));
+        fallbackTextarea.focus();
+        fallbackTextarea.value = text;
+        fallbackTextarea.dispatchEvent(new Event('input', { bubbles: true }));
+        fallbackTextarea.dispatchEvent(new Event('change', { bubbles: true }));
+        await new Promise(resolve => setTimeout(resolve, 50));
+        fallbackTextarea.style.display = originalDisplay;
+        console.log('[LLM Injector] Text set in fallback textarea');
+        return true;
+      }
+    }
+
     // Handle textarea
     if (element instanceof HTMLTextAreaElement) {
       element.value = text;
+      element.focus();
       element.dispatchEvent(new Event('input', { bubbles: true }));
       element.dispatchEvent(new Event('change', { bubbles: true }));
       return true;
@@ -70,24 +111,21 @@ async function setInputValue(element: Element, text: string): Promise<boolean> {
 
     // Handle contenteditable
     if (element.getAttribute('contenteditable') === 'true') {
+      (element as HTMLElement).focus();
       element.textContent = text;
-
-      // Dispatch input event for React/Vue frameworks
       element.dispatchEvent(new InputEvent('input', {
         bubbles: true,
         cancelable: true,
         data: text
       }));
-
-      // Some sites need focus event
-      (element as HTMLElement).focus();
-
+      element.dispatchEvent(new Event('change', { bubbles: true }));
       return true;
     }
 
     // Handle generic input
     if (element instanceof HTMLInputElement) {
       element.value = text;
+      element.focus();
       element.dispatchEvent(new Event('input', { bubbles: true }));
       return true;
     }
@@ -111,7 +149,55 @@ async function clickSubmit(selector: string): Promise<boolean> {
     return true;
   }
 
-  // Try alternative selectors
+  // Site-specific fallbacks
+  const hostname = window.location.hostname;
+
+  if (hostname.includes('grok.com')) {
+    const grokButtons = document.querySelectorAll('button:not([disabled])');
+    for (const btn of grokButtons) {
+      if (btn instanceof HTMLElement) {
+        const type = btn.getAttribute('type') || '';
+        const hasIcon = btn.querySelector('svg') !== null;
+        const ariaLabel = btn.getAttribute('aria-label')?.toLowerCase() || '';
+        if (type === 'submit' && hasIcon) {
+          btn.click();
+          return true;
+        }
+        if (ariaLabel.includes('send') || ariaLabel.includes('отправить')) {
+          btn.click();
+          return true;
+        }
+      }
+    }
+    const input = document.querySelector('div[contenteditable="true"]');
+    if (input instanceof HTMLElement) {
+      input.focus();
+      input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+      return true;
+    }
+  }
+
+  if (hostname.includes('perplexity.ai')) {
+    const perplexityButtons = document.querySelectorAll('button:not([disabled])');
+    for (const btn of perplexityButtons) {
+      if (btn instanceof HTMLElement) {
+        const hasIcon = btn.querySelector('svg') !== null;
+        const ariaLabel = btn.getAttribute('aria-label')?.toLowerCase() || '';
+        if (ariaLabel === 'submit' && hasIcon) {
+          btn.click();
+          return true;
+        }
+      }
+    }
+    const textarea = document.querySelector('textarea');
+    if (textarea instanceof HTMLTextAreaElement) {
+      textarea.focus();
+      textarea.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+      return true;
+    }
+  }
+
+  // Generic fallback
   const alternativeButtons = document.querySelectorAll('button[type="submit"], button:has(svg)');
   for (const btn of alternativeButtons) {
     if (btn instanceof HTMLElement && !btn.hasAttribute('disabled')) {

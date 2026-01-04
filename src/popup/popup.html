@@ -33,6 +33,8 @@
             <option value="chatgpt">ChatGPT</option>
             <option value="claude">Claude</option>
             <option value="gemini">Gemini</option>
+            <option value="grok">Grok</option>
+            <option value="perplexity">Perplexity</option>
           </select>
         </div>
 
@@ -40,6 +42,22 @@
           <label for="prompt-select">Prompt Template</label>
           <select id="prompt-select">
             <!-- Populated dynamically -->
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="language-select">Output Language</label>
+          <select id="language-select">
+            <option value="English">English</option>
+            <option value="Russian">Russian</option>
+            <option value="Spanish">Spanish</option>
+            <option value="French">French</option>
+            <option value="German">German</option>
+            <option value="Chinese">Chinese</option>
+            <option value="Japanese">Japanese</option>
+            <option value="Korean">Korean</option>
+            <option value="Portuguese">Portuguese</option>
+            <option value="Italian">Italian</option>
           </select>
         </div>
 
@@ -108,7 +126,7 @@
           <div class="form-group">
             <label for="prompt-template-input">Template</label>
             <textarea id="prompt-template-input" rows="10" placeholder="Use {video_title}, {transcript}, etc."></textarea>
-            <small>Variables: {video_title}, {video_url}, {channel_name}, {transcript}, {duration}</small>
+            <small>Variables: {video_title}, {video_url}, {channel_name}, {transcript}, {duration}, {output_language}</small>
           </div>
           <div class="modal-actions">
             <button id="cancel-edit-btn" class="btn secondary">Cancel</button>

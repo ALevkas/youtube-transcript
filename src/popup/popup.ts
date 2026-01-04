@@ -5,9 +5,9 @@ import type {
   TranscriptResultPayload,
   VideoInfoPayload,
   VideoMetadata
-} from '../types';
-import { LLM_PROVIDERS } from '../config/providers';
-import { DEFAULT_PROMPTS, fillPromptTemplate } from '../config/prompts';
+} from '../types/index.js';
+import { LLM_PROVIDERS } from '../config/providers.js';
+import { DEFAULT_PROMPTS, fillPromptTemplate } from '../config/prompts.js';
 
 // State
 interface AppState {
@@ -15,6 +15,7 @@ interface AppState {
   transcript: string | null;
   selectedProvider: LLMProvider;
   selectedPromptId: string;
+  selectedLanguage: string;
   prompts: PromptTemplate[];
   isLoading: boolean;
   editingPromptId: string | null;
@@ -25,6 +26,7 @@ const state: AppState = {
   transcript: null,
   selectedProvider: 'chatgpt',
   selectedPromptId: 'summary',
+  selectedLanguage: 'English',
   prompts: [...DEFAULT_PROMPTS],
   isLoading: false,
   editingPromptId: null
@@ -41,6 +43,7 @@ const elements = {
   videoChannel: document.getElementById('video-channel')!,
   llmSelect: document.getElementById('llm-select') as HTMLSelectElement,
   promptSelect: document.getElementById('prompt-select') as HTMLSelectElement,
+  languageSelect: document.getElementById('language-select') as HTMLSelectElement,
   promptPreviewText: document.getElementById('prompt-preview-text')!,
   sendBtn: document.getElementById('send-btn')!,
   sendRawBtn: document.getElementById('send-raw-btn')!,
@@ -105,8 +108,9 @@ async function loadSettings(): Promise<void> {
   const result = await chrome.storage.sync.get([
     'selectedProvider',
     'selectedPromptId',
+    'selectedLanguage',
     'customPrompts'
-  ]) as Partial<StorageData>;
+  ]) as Partial<StorageData> & { selectedLanguage?: string };
 
   if (result.selectedProvider) {
     state.selectedProvider = result.selectedProvider;
@@ -115,6 +119,11 @@ async function loadSettings(): Promise<void> {
 
   if (result.selectedPromptId) {
     state.selectedPromptId = result.selectedPromptId;
+  }
+
+  if (result.selectedLanguage) {
+    state.selectedLanguage = result.selectedLanguage;
+    elements.languageSelect.value = result.selectedLanguage;
   }
 
   if (result.customPrompts) {
@@ -129,6 +138,7 @@ async function saveSettings(): Promise<void> {
   await chrome.storage.sync.set({
     selectedProvider: state.selectedProvider,
     selectedPromptId: state.selectedPromptId,
+    selectedLanguage: state.selectedLanguage,
     customPrompts
   });
 }
@@ -156,7 +166,8 @@ function updatePromptPreview(): void {
       video_url: state.videoMetadata?.url || '[URL]',
       channel_name: state.videoMetadata?.channelName || '[Channel]',
       transcript: state.transcript?.slice(0, 200) + '...' || '[Transcript will appear here]',
-      duration: state.videoMetadata?.duration || '[Duration]'
+      duration: state.videoMetadata?.duration || '[Duration]',
+      output_language: state.selectedLanguage
     });
     elements.promptPreviewText.textContent = filled;
   }
@@ -367,7 +378,8 @@ async function sendToLLM(): Promise<void> {
       video_url: state.videoMetadata.url,
       channel_name: state.videoMetadata.channelName,
       transcript: state.transcript,
-      duration: state.videoMetadata.duration
+      duration: state.videoMetadata.duration,
+      output_language: state.selectedLanguage
     });
 
     const provider = LLM_PROVIDERS[state.selectedProvider];
@@ -446,6 +458,12 @@ elements.promptSelect.addEventListener('change', () => {
   saveSettings();
 });
 
+elements.languageSelect.addEventListener('change', () => {
+  state.selectedLanguage = elements.languageSelect.value;
+  updatePromptPreview();
+  saveSettings();
+});
+
 elements.sendBtn.addEventListener('click', sendToLLM);
 elements.sendRawBtn.addEventListener('click', sendRawToLLM);
 elements.copyBtn.addEventListener('click', copyTranscript);
@@ -469,8 +487,24 @@ elements.editPromptModal.addEventListener('click', (e) => {
   }
 });
 
+// Reset video-specific state
+function resetVideoState(): void {
+  state.videoMetadata = null;
+  state.transcript = null;
+
+  // Reset UI
+  elements.videoTitle.textContent = 'Loading...';
+  elements.videoChannel.textContent = '';
+  elements.videoInfoSection.classList.add('hidden');
+  elements.sendBtn.setAttribute('disabled', 'true');
+  elements.sendRawBtn.setAttribute('disabled', 'true');
+  elements.copyBtn.setAttribute('disabled', 'true');
+  hideError();
+}
+
 // Initialize
 async function init(): Promise<void> {
+  resetVideoState();
   await loadSettings();
   await getVideoInfo();
   await getTranscript();

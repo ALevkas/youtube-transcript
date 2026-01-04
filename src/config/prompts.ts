@@ -3,67 +3,67 @@ import type { PromptTemplate } from '../types';
 export const DEFAULT_PROMPTS: PromptTemplate[] = [
   {
     id: 'summary',
-    name: 'Резюме',
+    name: 'Summary',
     isBuiltIn: true,
     isDefault: true,
-    template: `Проанализируй транскрипт YouTube видео "{video_title}" ({video_url}):
+    template: `Analyze the transcript of the YouTube video "{video_title}" ({video_url}):
 
 ---
 {transcript}
 ---
 
-Задачи:
-1. Краткое резюме (2-3 предложения)
-2. Ключевые тезисы (bullet points)
-3. Основные выводы и рекомендации
-4. Временные метки важных моментов (если доступны)`
+Tasks (respond in {output_language}):
+1. Brief summary (2-3 sentences)
+2. Key points (bullet points)
+3. Main conclusions and recommendations
+4. Timestamps of important moments (if available)`
   },
   {
     id: 'key-points',
-    name: 'Ключевые моменты',
+    name: 'Key Points',
     isBuiltIn: true,
-    template: `Выдели ключевые моменты из видео "{video_title}":
+    template: `Extract key points from the video "{video_title}":
 
 {transcript}
 
-Представь в виде:
-- Главные тезисы (максимум 10)
-- Важные цитаты
+Present in {output_language}:
+- Main points (maximum 10)
+- Important quotes
 - Actionable takeaways`
   },
   {
     id: 'qa',
-    name: 'Q&A режим',
+    name: 'Q&A Mode',
     isBuiltIn: true,
-    template: `Ты - эксперт по содержимому видео "{video_title}".
+    template: `You are an expert on the content of the video "{video_title}".
 
-Транскрипт:
+Transcript:
 {transcript}
 
-Теперь я буду задавать вопросы по содержимому этого видео. Отвечай на основе информации из транскрипта.`
+Now I will ask questions about the content of this video. Answer based on the information from the transcript. Respond in {output_language}.`
   },
   {
     id: 'translate',
-    name: 'Перевод',
+    name: 'Translate',
     isBuiltIn: true,
-    template: `Переведи транскрипт видео "{video_title}" на русский язык, сохраняя смысл и стиль оригинала:
+    template: `Translate the transcript of the video "{video_title}" to {output_language}, preserving the meaning and style of the original:
 
 {transcript}`
   },
   {
     id: 'notes',
-    name: 'Конспект',
+    name: 'Study Notes',
     isBuiltIn: true,
-    template: `Создай структурированный конспект для обучения по видео "{video_title}" ({video_url}):
+    template: `Create structured study notes for the video "{video_title}" ({video_url}):
 
 {transcript}
 
-Формат конспекта:
-## Основная тема
-## Ключевые концепции
-## Примеры и кейсы
-## Вопросы для самопроверки
-## Дополнительные ресурсы (если упоминаются)`
+Format the notes in {output_language}:
+## Main Topic
+## Key Concepts
+## Examples and Cases
+## Self-Check Questions
+## Additional Resources (if mentioned)`
   }
 ];
 

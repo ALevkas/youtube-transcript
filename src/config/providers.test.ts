@@ -24,6 +24,20 @@ describe('providers', () => {
       expect(LLM_PROVIDERS.gemini.url).toContain('gemini.google.com');
     });
 
+    it('should have grok provider', () => {
+      expect(LLM_PROVIDERS.grok).toBeDefined();
+      expect(LLM_PROVIDERS.grok.id).toBe('grok');
+      expect(LLM_PROVIDERS.grok.name).toBe('Grok');
+      expect(LLM_PROVIDERS.grok.url).toContain('grok.com');
+    });
+
+    it('should have perplexity provider', () => {
+      expect(LLM_PROVIDERS.perplexity).toBeDefined();
+      expect(LLM_PROVIDERS.perplexity.id).toBe('perplexity');
+      expect(LLM_PROVIDERS.perplexity.name).toBe('Perplexity');
+      expect(LLM_PROVIDERS.perplexity.url).toContain('perplexity.ai');
+    });
+
     it('all providers should have required fields', () => {
       for (const [key, provider] of Object.entries(LLM_PROVIDERS)) {
         expect(provider.id).toBe(key);

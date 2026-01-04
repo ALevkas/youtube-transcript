@@ -21,5 +21,19 @@ export const LLM_PROVIDERS: Record<LLMProvider, LLMConfig> = {
     url: 'https://gemini.google.com/app',
     inputSelector: '.ql-editor',
     submitSelector: 'button[aria-label="Send message"]'
-  }
+  },
+  grok: {
+    id: 'grok',
+    name: 'Grok',
+    url: 'https://grok.com/',
+    inputSelector: 'div[contenteditable="true"]',
+    submitSelector: 'button[type="submit"]'
+  },
+  perplexity: {
+    id: 'perplexity',
+    name: 'Perplexity',
+    url: 'https://www.perplexity.ai/',
+    inputSelector: 'textarea',
+    submitSelector: 'button[type="submit"]'
+  },
 };

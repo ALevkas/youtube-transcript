@@ -1,5 +1,5 @@
 // LLM Provider types
-export type LLMProvider = 'chatgpt' | 'claude' | 'gemini';
+export type LLMProvider = 'chatgpt' | 'claude' | 'gemini' | 'grok' | 'perplexity';
 
 export interface LLMConfig {
   id: LLMProvider;
