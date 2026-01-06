@@ -12,6 +12,7 @@
   ],
   "host_permissions": [
     "https://www.youtube.com/*",
+    "https://chatgpt.com/*",
     "https://chat.openai.com/*",
     "https://claude.ai/*",
     "https://gemini.google.com/*",
@@ -28,6 +29,7 @@
     },
     {
       "matches": [
+        "https://chatgpt.com/*",
         "https://chat.openai.com/*",
         "https://claude.ai/*",
         "https://gemini.google.com/*",

@@ -48,6 +48,7 @@ const elements = {
   sendBtn: document.getElementById('send-btn')!,
   sendRawBtn: document.getElementById('send-raw-btn')!,
   copyBtn: document.getElementById('copy-btn')!,
+  copyWithPromptBtn: document.getElementById('copy-with-prompt-btn')!,
   toast: document.getElementById('toast')!,
   managePromptsBtn: document.getElementById('manage-prompts-btn')!,
   promptModal: document.getElementById('prompt-modal')!,
@@ -84,6 +85,7 @@ function setLoading(loading: boolean): void {
     elements.sendBtn.setAttribute('disabled', 'true');
     elements.sendRawBtn.setAttribute('disabled', 'true');
     elements.copyBtn.setAttribute('disabled', 'true');
+    elements.copyWithPromptBtn.setAttribute('disabled', 'true');
   } else {
     btnText.classList.remove('hidden');
     btnLoading.classList.add('hidden');
@@ -91,6 +93,7 @@ function setLoading(loading: boolean): void {
       elements.sendBtn.removeAttribute('disabled');
       elements.sendRawBtn.removeAttribute('disabled');
       elements.copyBtn.removeAttribute('disabled');
+      elements.copyWithPromptBtn.removeAttribute('disabled');
     }
   }
 }
@@ -258,7 +261,7 @@ function closeEditPromptModal(): void {
 }
 
 // Prompt CRUD
-function savePrompt(): void {
+async function savePrompt(): Promise<void> {
   const name = elements.promptNameInput.value.trim();
   const template = elements.promptTemplateInput.value.trim();
 
@@ -289,21 +292,21 @@ function savePrompt(): void {
     state.selectedPromptId = newPrompt.id;
   }
 
-  saveSettings();
+  await saveSettings();
   updatePromptSelect();
   renderPromptsList();
   closeEditPromptModal();
   hideError();
 }
 
-function deletePrompt(promptId: string): void {
+async function deletePrompt(promptId: string): Promise<void> {
   state.prompts = state.prompts.filter(p => p.id !== promptId);
 
   if (state.selectedPromptId === promptId) {
     state.selectedPromptId = 'summary';
   }
 
-  saveSettings();
+  await saveSettings();
   updatePromptSelect();
   renderPromptsList();
 }
@@ -441,8 +444,37 @@ async function copyTranscript(): Promise<void> {
   try {
     await navigator.clipboard.writeText(state.transcript);
     showToast('Transcript copied to clipboard!');
-  } catch (error) {
+  } catch {
     showError('Failed to copy transcript');
+  }
+}
+
+async function copyWithPrompt(): Promise<void> {
+  if (!state.transcript || !state.videoMetadata) {
+    showError('No transcript available');
+    return;
+  }
+
+  try {
+    const prompt = state.prompts.find(p => p.id === state.selectedPromptId);
+    if (!prompt) {
+      showError('Prompt not found');
+      return;
+    }
+
+    const filledPrompt = fillPromptTemplate(prompt.template, {
+      video_title: state.videoMetadata.title,
+      video_url: state.videoMetadata.url,
+      channel_name: state.videoMetadata.channelName,
+      transcript: state.transcript,
+      duration: state.videoMetadata.duration,
+      output_language: state.selectedLanguage
+    });
+
+    await navigator.clipboard.writeText(filledPrompt);
+    showToast('Copied with prompt!');
+  } catch {
+    showError('Failed to copy');
   }
 }
 
@@ -467,6 +499,7 @@ elements.languageSelect.addEventListener('change', () => {
 elements.sendBtn.addEventListener('click', sendToLLM);
 elements.sendRawBtn.addEventListener('click', sendRawToLLM);
 elements.copyBtn.addEventListener('click', copyTranscript);
+elements.copyWithPromptBtn.addEventListener('click', copyWithPrompt);
 elements.managePromptsBtn.addEventListener('click', openPromptModal);
 elements.closeModal.addEventListener('click', closePromptModal);
 elements.addPromptBtn.addEventListener('click', () => openEditPromptModal(null));
@@ -499,6 +532,7 @@ function resetVideoState(): void {
   elements.sendBtn.setAttribute('disabled', 'true');
   elements.sendRawBtn.setAttribute('disabled', 'true');
   elements.copyBtn.setAttribute('disabled', 'true');
+  elements.copyWithPromptBtn.setAttribute('disabled', 'true');
   hideError();
 }
 

@@ -16,10 +16,15 @@ interface InjectionConfig {
 }
 
 const SITE_CONFIGS: Record<string, InjectionConfig> = {
+  'chatgpt.com': {
+    inputSelector: '#prompt-textarea',
+    submitSelector: '#composer-submit-button, [data-testid="send-button"]',
+    waitTime: 2000
+  },
   'chat.openai.com': {
-    inputSelector: '#prompt-textarea.ProseMirror',
-    submitSelector: '#composer-submit-button',
-    waitTime: 1000
+    inputSelector: '#prompt-textarea',
+    submitSelector: '#composer-submit-button, [data-testid="send-button"]',
+    waitTime: 2000
   },
   'claude.ai': {
     inputSelector: '[contenteditable="true"].ProseMirror',
@@ -81,21 +86,42 @@ async function setInputValue(element: Element, text: string): Promise<boolean> {
   try {
     const hostname = window.location.hostname;
 
-    // ChatGPT specific handling - try fallback textarea first
-    if (hostname.includes('chat.openai.com')) {
-      const fallbackTextarea = document.querySelector('textarea[name="prompt-textarea"]') as HTMLTextAreaElement;
-      if (fallbackTextarea) {
-        console.log('[LLM Injector] Using fallback textarea for ChatGPT');
-        const originalDisplay = fallbackTextarea.style.display;
-        fallbackTextarea.style.display = '';
-        await new Promise(resolve => setTimeout(resolve, 50));
-        fallbackTextarea.focus();
-        fallbackTextarea.value = text;
-        fallbackTextarea.dispatchEvent(new Event('input', { bubbles: true }));
-        fallbackTextarea.dispatchEvent(new Event('change', { bubbles: true }));
-        await new Promise(resolve => setTimeout(resolve, 50));
-        fallbackTextarea.style.display = originalDisplay;
-        console.log('[LLM Injector] Text set in fallback textarea');
+    // ChatGPT specific handling - use ProseMirror with clipboard paste
+    if (hostname.includes('chatgpt.com') || hostname.includes('chat.openai.com')) {
+      const proseMirror = document.querySelector('#prompt-textarea') as HTMLElement;
+      if (proseMirror && proseMirror.getAttribute('contenteditable') === 'true') {
+        console.log('[LLM Injector] Using ProseMirror for ChatGPT');
+
+        // Focus the editor
+        proseMirror.focus();
+        await new Promise(resolve => setTimeout(resolve, 100));
+
+        // Clear existing content
+        proseMirror.innerHTML = '';
+
+        // Create a paragraph element with the text (ProseMirror structure)
+        const p = document.createElement('p');
+        p.textContent = text;
+        proseMirror.appendChild(p);
+
+        // Dispatch input event to trigger React state update
+        proseMirror.dispatchEvent(new InputEvent('input', {
+          bubbles: true,
+          cancelable: true,
+          inputType: 'insertText',
+          data: text
+        }));
+
+        // Also trigger a beforeinput event
+        proseMirror.dispatchEvent(new InputEvent('beforeinput', {
+          bubbles: true,
+          cancelable: true,
+          inputType: 'insertText',
+          data: text
+        }));
+
+        await new Promise(resolve => setTimeout(resolve, 200));
+        console.log('[LLM Injector] Text set in ProseMirror');
         return true;
       }
     }

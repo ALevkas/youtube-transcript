@@ -839,7 +839,7 @@ Format the notes in {output_language}:
 ];
 
 const LLM_URLS: Record<string, string> = {
-  chatgpt: 'https://chat.openai.com/',
+  chatgpt: 'https://chatgpt.com/',
   claude: 'https://claude.ai/new',
   gemini: 'https://gemini.google.com/app',
   grok: 'https://grok.com/',

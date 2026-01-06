@@ -4,9 +4,9 @@ export const LLM_PROVIDERS: Record<LLMProvider, LLMConfig> = {
   chatgpt: {
     id: 'chatgpt',
     name: 'ChatGPT',
-    url: 'https://chat.openai.com/',
+    url: 'https://chatgpt.com/',
     inputSelector: '#prompt-textarea',
-    submitSelector: '[data-testid="send-button"]'
+    submitSelector: '#composer-submit-button, [data-testid="send-button"]'
   },
   claude: {
     id: 'claude',
