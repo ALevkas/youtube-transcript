@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privacy Policy - YouTube Transcript to LLM</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            line-height: 1.7;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #1a1a1a;
+            margin-bottom: 8px;
+            font-size: 2.2rem;
+            background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .subtitle {
+            color: #666;
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+        }
+        .last-updated {
+            color: #888;
+            font-size: 0.9rem;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        h2 {
+            color: #2d2d2d;
+            margin-top: 35px;
+            margin-bottom: 15px;
+            font-size: 1.4rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        h2::before {
+            content: '';
+            width: 4px;
+            height: 24px;
+            background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+            border-radius: 2px;
+        }
+        h3 {
+            color: #444;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+        p {
+            margin-bottom: 15px;
+            color: #555;
+        }
+        ul, ol {
+            margin-bottom: 15px;
+            padding-left: 25px;
+        }
+        li {
+            margin-bottom: 8px;
+            color: #555;
+        }
+        strong {
+            color: #1a1a1a;
+        }
+        a {
+            color: #7c3aed;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+        a:hover {
+            color: #6d28d9;
+            text-decoration: underline;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        th, td {
+            padding: 14px 16px;
+            text-align: left;
+        }
+        th {
+            background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+            color: white;
+            font-weight: 600;
+        }
+        td {
+            border-bottom: 1px solid #eee;
+            color: #555;
+        }
+        tr:last-child td {
+            border-bottom: none;
+        }
+        tr:nth-child(even) {
+            background: #f9fafb;
+        }
+        .highlight {
+            background: linear-gradient(135deg, #f0e6ff 0%, #e8f4ff 100%);
+            padding: 20px;
+            border-radius: 12px;
+            border-left: 4px solid #7c3aed;
+            margin: 20px 0;
+        }
+        .highlight strong {
+            color: #7c3aed;
+        }
+        .links-list {
+            list-style: none;
+            padding-left: 0;
+        }
+        .links-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .links-list li:last-child {
+            border-bottom: none;
+        }
+        .links-list a {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .links-list a::before {
+            content: '→';
+            color: #a855f7;
+        }
+        code {
+            background: #f3f4f6;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+        .footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            text-align: center;
+            color: #888;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Privacy Policy</h1>
+        <p class="subtitle">YouTube Transcript to LLM Chrome Extension</p>
+        <p class="last-updated">Last updated: January 6, 2026</p>
+
+        <h2>Overview</h2>
+        <p>YouTube Transcript to LLM is a browser extension that extracts transcripts from YouTube videos and sends them to Large Language Model (LLM) services for analysis. This privacy policy explains how the extension handles your data.</p>
+
+        <h2>Data Collection</h2>
+        <div class="highlight">
+            <strong>We do not collect, store, or transmit any personal data to our servers.</strong><br>
+            The extension operates entirely locally on your device.
+        </div>
+
+        <h3>What data the extension accesses:</h3>
+        <ol>
+            <li><strong>YouTube Video Data</strong>
+                <ul>
+                    <li>Video title, channel name, duration, and URL from YouTube pages you visit</li>
+                    <li>Video transcripts/captions (when available)</li>
+                    <li>This data is accessed only when you actively use the extension on a YouTube video page</li>
+                </ul>
+            </li>
+            <li><strong>User Preferences</strong>
+                <ul>
+                    <li>Selected LLM provider (ChatGPT, Claude, Gemini, Grok, or Perplexity)</li>
+                    <li>Selected prompt template</li>
+                    <li>Output language preference</li>
+                    <li>Custom prompt templates you create</li>
+                </ul>
+            </li>
+        </ol>
+
+        <h3>How data is stored:</h3>
+        <ul>
+            <li><strong>Chrome Sync Storage:</strong> Stores your preferences (selected provider, prompt ID, custom prompts). This data syncs across your Chrome browsers if you're signed into Chrome.</li>
+            <li><strong>Chrome Local Storage:</strong> Temporarily stores the prompt text when transferring it to an LLM tab. This data is automatically cleared after use.</li>
+        </ul>
+
+        <h3>Data NOT collected:</h3>
+        <ul>
+            <li>We do NOT collect browsing history</li>
+            <li>We do NOT collect personal information</li>
+            <li>We do NOT use analytics or tracking</li>
+            <li>We do NOT have external servers that receive your data</li>
+            <li>We do NOT sell or share any data with third parties</li>
+        </ul>
+
+        <h2>Third-Party Services</h2>
+        <p>When you choose to send a transcript to an LLM service, the extension opens a new tab with your selected provider and injects the prompt into their interface.</p>
+        <p><strong>Important:</strong> Once you send data to these third-party LLM services, their respective privacy policies apply:</p>
+        <ul class="links-list">
+            <li><a href="https://openai.com/privacy/" target="_blank" rel="noopener">OpenAI (ChatGPT) Privacy Policy</a></li>
+            <li><a href="https://www.anthropic.com/privacy" target="_blank" rel="noopener">Anthropic (Claude) Privacy Policy</a></li>
+            <li><a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Google (Gemini) Privacy Policy</a></li>
+            <li><a href="https://x.ai/legal/privacy-policy" target="_blank" rel="noopener">xAI (Grok) Privacy Policy</a></li>
+            <li><a href="https://www.perplexity.ai/privacy" target="_blank" rel="noopener">Perplexity Privacy Policy</a></li>
+        </ul>
+
+        <h2>Permissions</h2>
+        <p>The extension requires the following permissions:</p>
+        <table>
+            <tr>
+                <th>Permission</th>
+                <th>Purpose</th>
+            </tr>
+            <tr>
+                <td><code>activeTab</code></td>
+                <td>Access the current YouTube tab to extract video information and transcripts</td>
+            </tr>
+            <tr>
+                <td><code>storage</code></td>
+                <td>Save your preferences locally</td>
+            </tr>
+            <tr>
+                <td><code>tabs</code></td>
+                <td>Open new tabs for LLM services</td>
+            </tr>
+            <tr>
+                <td><code>contextMenus</code></td>
+                <td>Add right-click menu option on YouTube</td>
+            </tr>
+            <tr>
+                <td><code>clipboardWrite</code></td>
+                <td>Copy transcripts to clipboard when requested</td>
+            </tr>
+        </table>
+
+        <h2>Data Security</h2>
+        <p>All data processing happens locally in your browser. No data is transmitted to external servers controlled by us. Your preferences are stored using Chrome's built-in storage APIs which are encrypted and secured by Chrome.</p>
+
+        <h2>Children's Privacy</h2>
+        <p>This extension does not knowingly collect any personal information from children under 13 years of age.</p>
+
+        <h2>Changes to This Policy</h2>
+        <p>We may update this privacy policy from time to time. Any changes will be reflected in the "Last updated" date at the top of this document.</p>
+
+        <h2>Contact</h2>
+        <p>If you have any questions about this privacy policy, please open an issue on our <a href="https://github.com/ALevkas/youtube-transcript" target="_blank" rel="noopener">GitHub repository</a>.</p>
+
+        <h2>Open Source</h2>
+        <p>This extension is open source. You can <a href="https://github.com/ALevkas/youtube-transcript" target="_blank" rel="noopener">review the complete source code</a> to verify our privacy practices.</p>
+
+        <div class="footer">
+            YouTube Transcript to LLM &copy; 2026
+        </div>
+    </div>
+</body>
+</html>
