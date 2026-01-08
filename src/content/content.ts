@@ -847,16 +847,26 @@ const LLM_URLS: Record<string, string> = {
 };
 
 async function getLLMSettings(): Promise<LLMSettings> {
-  return new Promise((resolve) => {
-    chrome.storage.sync.get(['selectedProvider', 'selectedPromptId', 'selectedLanguage', 'customPrompts'], (result) => {
-      resolve({
-        selectedProvider: result.selectedProvider || 'chatgpt',
-        selectedPromptId: result.selectedPromptId || 'summary',
-        selectedLanguage: result.selectedLanguage || 'English',
-        customPrompts: result.customPrompts || []
-      });
-    });
-  });
+  // Load preferences from sync storage
+  const syncResult = await chrome.storage.sync.get([
+    'selectedProvider',
+    'selectedPromptId',
+    'selectedLanguage',
+    'customPrompts' // Legacy fallback
+  ]);
+
+  // Load custom prompts from local storage (larger quota)
+  const localResult = await chrome.storage.local.get(['customPrompts']);
+
+  // Prefer local storage, fallback to sync storage for migration
+  const customPrompts = localResult.customPrompts || syncResult.customPrompts || [];
+
+  return {
+    selectedProvider: syncResult.selectedProvider || 'chatgpt',
+    selectedPromptId: syncResult.selectedPromptId || 'summary',
+    selectedLanguage: syncResult.selectedLanguage || 'English',
+    customPrompts
+  };
 }
 
 /**

@@ -108,29 +108,41 @@ function showToast(message: string): void {
 
 // Storage
 async function loadSettings(): Promise<void> {
-  const result = await chrome.storage.sync.get([
+  // Load preferences from sync storage
+  const syncResult = await chrome.storage.sync.get([
     'selectedProvider',
     'selectedPromptId',
     'selectedLanguage',
-    'customPrompts'
+    'customPrompts' // Legacy: check sync storage for migration
   ]) as Partial<StorageData> & { selectedLanguage?: string };
 
-  if (result.selectedProvider) {
-    state.selectedProvider = result.selectedProvider;
-    elements.llmSelect.value = result.selectedProvider;
+  // Load custom prompts from local storage (larger quota)
+  const localResult = await chrome.storage.local.get(['customPrompts']) as Pick<StorageData, 'customPrompts'>;
+
+  if (syncResult.selectedProvider) {
+    state.selectedProvider = syncResult.selectedProvider;
+    elements.llmSelect.value = syncResult.selectedProvider;
   }
 
-  if (result.selectedPromptId) {
-    state.selectedPromptId = result.selectedPromptId;
+  if (syncResult.selectedPromptId) {
+    state.selectedPromptId = syncResult.selectedPromptId;
   }
 
-  if (result.selectedLanguage) {
-    state.selectedLanguage = result.selectedLanguage;
-    elements.languageSelect.value = result.selectedLanguage;
+  if (syncResult.selectedLanguage) {
+    state.selectedLanguage = syncResult.selectedLanguage;
+    elements.languageSelect.value = syncResult.selectedLanguage;
   }
 
-  if (result.customPrompts) {
-    state.prompts = [...DEFAULT_PROMPTS, ...result.customPrompts];
+  // Prefer local storage, fallback to sync storage for migration
+  const customPrompts = localResult.customPrompts || syncResult.customPrompts;
+  if (customPrompts) {
+    state.prompts = [...DEFAULT_PROMPTS, ...customPrompts];
+
+    // Migrate from sync to local storage if needed
+    if (syncResult.customPrompts && !localResult.customPrompts) {
+      await chrome.storage.local.set({ customPrompts: syncResult.customPrompts });
+      await chrome.storage.sync.remove('customPrompts');
+    }
   }
 
   updatePromptSelect();
@@ -138,12 +150,16 @@ async function loadSettings(): Promise<void> {
 
 async function saveSettings(): Promise<void> {
   const customPrompts = state.prompts.filter(p => !p.isBuiltIn);
+
+  // Save preferences to sync storage (small data, syncs across devices)
   await chrome.storage.sync.set({
     selectedProvider: state.selectedProvider,
     selectedPromptId: state.selectedPromptId,
-    selectedLanguage: state.selectedLanguage,
-    customPrompts
+    selectedLanguage: state.selectedLanguage
   });
+
+  // Save custom prompts to local storage (larger quota - 10MB vs 8KB per item)
+  await chrome.storage.local.set({ customPrompts });
 }
 
 // UI Updates
