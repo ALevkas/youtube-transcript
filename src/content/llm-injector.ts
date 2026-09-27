@@ -17,36 +17,42 @@ interface InjectionConfig {
 
 const SITE_CONFIGS: Record<string, InjectionConfig> = {
   'chatgpt.com': {
-    inputSelector: '#prompt-textarea',
-    submitSelector: '#composer-submit-button, [data-testid="send-button"]',
+    inputSelector: '#prompt-textarea, div.ProseMirror[contenteditable="true"]',
+    submitSelector: '#composer-submit-button, [data-testid="send-button"], form button[type="submit"]',
     waitTime: 2000
   },
   'chat.openai.com': {
-    inputSelector: '#prompt-textarea',
-    submitSelector: '#composer-submit-button, [data-testid="send-button"]',
+    inputSelector: '#prompt-textarea, div.ProseMirror[contenteditable="true"]',
+    submitSelector: '#composer-submit-button, [data-testid="send-button"], form button[type="submit"]',
     waitTime: 2000
   },
   'claude.ai': {
-    inputSelector: '[contenteditable="true"].ProseMirror',
-    submitSelector: 'button[aria-label="Send Message"]',
+    inputSelector: 'div.ProseMirror[contenteditable="true"]',
+    submitSelector: '[data-testid="chat-input-send"], button[aria-label="Send message"]',
     waitTime: 1500
   },
   'gemini.google.com': {
-    inputSelector: '.ql-editor, [contenteditable="true"]',
-    submitSelector: 'button[aria-label="Send message"], button.send-button',
+    inputSelector: '.ql-editor[contenteditable="true"]',
+    submitSelector: '.send-button button, button.send-button, button[aria-label="Send message"]',
     waitTime: 1500
   },
   'grok.com': {
-    inputSelector: 'div[contenteditable="true"], textarea[placeholder*="Ask"]',
-    submitSelector: 'button[type="submit"]',
+    inputSelector: 'textarea[aria-label], div[contenteditable="true"]',
+    submitSelector: '[data-testid="chat-submit"], button[type="submit"]',
     waitTime: 2500
   },
   'perplexity.ai': {
-    inputSelector: 'textarea, div[contenteditable="true"]',
-    submitSelector: 'button[aria-label="Submit"]',
+    inputSelector: '#ask-input, div[contenteditable="true"], textarea',
+    submitSelector: 'button[aria-label="Submit"], button:has(use[*|href="#pplx-icon-arrow-right"])',
     waitTime: 2500
   }
 };
+
+const SUBMIT_TIMEOUT_MS = 10000;
+
+function sleep(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
 
 /**
  * Wait for an element to appear in DOM
@@ -79,164 +85,70 @@ function waitForElement(selector: string, timeout = 10000): Promise<Element | nu
   });
 }
 
+function getInputText(element: Element): string {
+  if (element instanceof HTMLTextAreaElement || element instanceof HTMLInputElement) {
+    return element.value;
+  }
+  return (element as HTMLElement).innerText;
+}
+
 /**
- * Set value in input field (handles both textarea and contenteditable)
+ * Set value in input field (handles textarea and rich editors: ProseMirror, Quill, Lexical).
+ * execCommand('insertText') goes through the editor's native input pipeline,
+ * so framework state (React, ProseMirror, Lexical) sees the text.
  */
 async function setInputValue(element: Element, text: string): Promise<boolean> {
   try {
-    const hostname = window.location.hostname;
+    const input = element as HTMLElement;
+    input.focus();
+    document.execCommand('selectAll');
+    document.execCommand('insertText', false, text);
+    await sleep(200);
 
-    // ChatGPT specific handling - use ProseMirror with clipboard paste
-    if (hostname.includes('chatgpt.com') || hostname.includes('chat.openai.com')) {
-      const proseMirror = document.querySelector('#prompt-textarea') as HTMLElement;
-      if (proseMirror && proseMirror.getAttribute('contenteditable') === 'true') {
-        console.log('[LLM Injector] Using ProseMirror for ChatGPT');
-
-        // Focus the editor
-        proseMirror.focus();
-        await new Promise(resolve => setTimeout(resolve, 100));
-
-        // Clear existing content
-        proseMirror.innerHTML = '';
-
-        // Create a paragraph element with the text (ProseMirror structure)
-        const p = document.createElement('p');
-        p.textContent = text;
-        proseMirror.appendChild(p);
-
-        // Dispatch input event to trigger React state update
-        proseMirror.dispatchEvent(new InputEvent('input', {
-          bubbles: true,
-          cancelable: true,
-          inputType: 'insertText',
-          data: text
-        }));
-
-        // Also trigger a beforeinput event
-        proseMirror.dispatchEvent(new InputEvent('beforeinput', {
-          bubbles: true,
-          cancelable: true,
-          inputType: 'insertText',
-          data: text
-        }));
-
-        await new Promise(resolve => setTimeout(resolve, 200));
-        console.log('[LLM Injector] Text set in ProseMirror');
-        return true;
-      }
-    }
-
-    // Handle textarea
-    if (element instanceof HTMLTextAreaElement) {
-      element.value = text;
-      element.focus();
-      element.dispatchEvent(new Event('input', { bubbles: true }));
-      element.dispatchEvent(new Event('change', { bubbles: true }));
+    if (getInputText(element).trim().length > 0) {
       return true;
     }
 
-    // Handle contenteditable
-    if (element.getAttribute('contenteditable') === 'true') {
-      (element as HTMLElement).focus();
-      element.textContent = text;
-      element.dispatchEvent(new InputEvent('input', {
-        bubbles: true,
-        cancelable: true,
-        data: text
-      }));
-      element.dispatchEvent(new Event('change', { bubbles: true }));
-      return true;
-    }
-
-    // Handle generic input
-    if (element instanceof HTMLInputElement) {
-      element.value = text;
-      element.focus();
+    // Fallback for plain fields when execCommand is unavailable
+    if (element instanceof HTMLTextAreaElement || element instanceof HTMLInputElement) {
+      const proto = element instanceof HTMLTextAreaElement ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype;
+      Object.getOwnPropertyDescriptor(proto, 'value')?.set?.call(element, text);
       element.dispatchEvent(new Event('input', { bubbles: true }));
       return true;
     }
 
     return false;
   } catch (e) {
-    console.error('Error setting input value:', e);
+    console.error('[YouTube Transcript LLM] Error setting input value:', e);
     return false;
   }
 }
 
+function isButtonEnabled(button: HTMLElement): boolean {
+  return !button.hasAttribute('disabled') && button.getAttribute('aria-disabled') !== 'true';
+}
+
 /**
- * Click submit button
+ * Wait for an enabled submit button and click it; fall back to pressing Enter in the input
  */
-async function clickSubmit(selector: string): Promise<boolean> {
-  await new Promise(resolve => setTimeout(resolve, 500));
-
-  const button = document.querySelector(selector);
-  if (button instanceof HTMLElement) {
-    button.click();
-    return true;
-  }
-
-  // Site-specific fallbacks
-  const hostname = window.location.hostname;
-
-  if (hostname.includes('grok.com')) {
-    const grokButtons = document.querySelectorAll('button:not([disabled])');
-    for (const btn of grokButtons) {
-      if (btn instanceof HTMLElement) {
-        const type = btn.getAttribute('type') || '';
-        const hasIcon = btn.querySelector('svg') !== null;
-        const ariaLabel = btn.getAttribute('aria-label')?.toLowerCase() || '';
-        if (type === 'submit' && hasIcon) {
-          btn.click();
-          return true;
-        }
-        if (ariaLabel.includes('send') || ariaLabel.includes('отправить')) {
-          btn.click();
-          return true;
-        }
-      }
-    }
-    const input = document.querySelector('div[contenteditable="true"]');
-    if (input instanceof HTMLElement) {
-      input.focus();
-      input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+async function clickSubmit(selector: string, input: Element): Promise<boolean> {
+  const deadline = Date.now() + SUBMIT_TIMEOUT_MS;
+  while (Date.now() < deadline) {
+    const button = [...document.querySelectorAll<HTMLElement>(selector)].find(isButtonEnabled);
+    if (button) {
+      button.click();
       return true;
     }
+    await sleep(250);
   }
 
-  if (hostname.includes('perplexity.ai')) {
-    const perplexityButtons = document.querySelectorAll('button:not([disabled])');
-    for (const btn of perplexityButtons) {
-      if (btn instanceof HTMLElement) {
-        const hasIcon = btn.querySelector('svg') !== null;
-        const ariaLabel = btn.getAttribute('aria-label')?.toLowerCase() || '';
-        if (ariaLabel === 'submit' && hasIcon) {
-          btn.click();
-          return true;
-        }
-      }
-    }
-    const textarea = document.querySelector('textarea');
-    if (textarea instanceof HTMLTextAreaElement) {
-      textarea.focus();
-      textarea.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
-      return true;
-    }
-  }
-
-  // Generic fallback
-  const alternativeButtons = document.querySelectorAll('button[type="submit"], button:has(svg)');
-  for (const btn of alternativeButtons) {
-    if (btn instanceof HTMLElement && !btn.hasAttribute('disabled')) {
-      const text = btn.textContent?.toLowerCase() || '';
-      const ariaLabel = btn.getAttribute('aria-label')?.toLowerCase() || '';
-      if (text.includes('send') || ariaLabel.includes('send')) {
-        btn.click();
-        return true;
-      }
-    }
-  }
-
-  return false;
+  console.warn('[YouTube Transcript LLM] Submit button not found, pressing Enter');
+  (input as HTMLElement).focus();
+  const enterInit: KeyboardEventInit = { key: 'Enter', code: 'Enter', keyCode: 13, which: 13, bubbles: true, cancelable: true };
+  input.dispatchEvent(new KeyboardEvent('keydown', enterInit));
+  input.dispatchEvent(new KeyboardEvent('keyup', enterInit));
+  await sleep(500);
+  return getInputText(input).trim().length === 0;
 }
 
 /**
@@ -266,7 +178,7 @@ async function injectPrompt(payload: InjectPromptPayload): Promise<{ success: bo
 
   try {
     // Wait for page to load
-    await new Promise(resolve => setTimeout(resolve, config.waitTime));
+    await sleep(config.waitTime);
 
     // Find input element
     const input = await waitForElement(config.inputSelector);
@@ -282,8 +194,7 @@ async function injectPrompt(payload: InjectPromptPayload): Promise<{ success: bo
 
     // Auto-submit if requested
     if (payload.autoSubmit) {
-      await new Promise(resolve => setTimeout(resolve, 500));
-      const submitSuccess = await clickSubmit(config.submitSelector);
+      const submitSuccess = await clickSubmit(config.submitSelector, input);
       if (!submitSuccess) {
         return { success: true, error: 'Prompt inserted but could not auto-submit' };
       }
